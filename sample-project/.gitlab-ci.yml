@@ -1,0 +1,64 @@
+# Steps to run in the preceding order
+stages:
+  - cleanup
+  - build
+  - test
+  - deploy
+
+variables:
+  # Image name created from the docker-compose
+  IMAGE_NAME: go-docker
+  # Create the final image name
+  # e.g., registry.gitlab.com/nikitabuyevich/go-docker:master
+  FINAL_IMAGE_NAME: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_NAME
+
+Cleanup Unused Docker Images:
+  stage: cleanup
+  tags:
+    - build
+    - docker
+  script:
+    # Delete unnecessary images
+    - docker image prune -f
+
+Build Docker:
+  stage: build
+  tags:
+    - build
+    - docker
+  before_script:
+    # Login to the Gitlab Docker Registry
+    - docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN $CI_REGISTRY
+  script:
+    # Build with docker-compose
+    - FINAL_IMAGE_NAME=$FINAL_IMAGE_NAME docker-compose build
+    # Push build image to Gitlab's Docker Registry
+    - docker push $FINAL_IMAGE_NAME
+
+Run Tests:
+  stage: test
+  tags:
+    - build
+    - docker
+  script:
+    # Run tests through docker-compose using
+    # the newly built image
+    - FINAL_IMAGE_NAME=$FINAL_IMAGE_NAME docker-compose up --exit-code-from tests tests
+
+Deploy to Prod:
+  stage: deploy
+  only:
+    # Only runs in the master branch
+    - master
+  tags:
+    # Only runs if the Gitlab Runner has a "deploy" tag
+    - deploy
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN $CI_REGISTRY
+  script:
+    # Pull the built image from Gitlab's Docker Registry
+    - docker pull $FINAL_IMAGE_NAME
+    # Run the Docker image
+    - FINAL_IMAGE_NAME=$FINAL_IMAGE_NAME docker-compose up --remove-orphans -d api
+    # Cleanup older images which are no longer used
+    - docker image prune -f

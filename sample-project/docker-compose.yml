@@ -1,0 +1,16 @@
+version: "3"
+services:
+  api:
+    # FINAL_IMAGE_NAME is passed in by
+    # the gitlab-ci.yml. Otherwise, it defaults
+    # to "go-docker" for the image name
+    image: "${FINAL_IMAGE_NAME:-go-docker}"
+    container_name: go-docker-api
+    build: ./
+    ports:
+      - "3000:3000"
+
+  tests:
+    image: "${FINAL_IMAGE_NAME:-go-docker}"
+    container_name: go-docker-tests
+    entrypoint: "/go/bin/tests"
