@@ -2,6 +2,8 @@
 
 # Docker Build to Deploy CI/CD &middot; [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](./LICENSE)
 
+> I have created a generic API webserver sample project which covers a lot more. Check out the [API Webserver w/ Docker, Caddy, and CI/CD](https://github.com/nikitabuyevich/go-api-docker-caddy-cicd).
+
 A generic `Gitlab CI/CD` pipeline which has the ability to build a `Docker` image on one machine and pull and run the image on another.
 
 In order to get the full benefits of this CI/CD pipeline, you will need to have `two separate servers`. One which you treat as the `build` server and one which you want to `deploy` to.
